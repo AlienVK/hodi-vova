@@ -2,6 +2,11 @@
 .claude/
 memory/
 
+# Firebase CLI
+firebase-debug.log
+*.log
+.firebase/
+
 # Системное
 Thumbs.db
 .DS_Store

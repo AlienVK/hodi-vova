@@ -8,12 +8,12 @@ window.CONFIG = {
   // данные не общие между устройствами). Заполните объект из консоли Firebase,
   // чтобы включить общий облачный бэкенд с живыми обновлениями.
   FIREBASE_CONFIG: {
-    // apiKey: "...",
-    // authDomain: "...",
-    // projectId: "...",
-    // storageBucket: "...",
-    // messagingSenderId: "...",
-    // appId: "..."
+    apiKey: "AIzaSyCFrlefwA8erAsSOWJrXW32EFoJtgDvVGc",
+    authDomain: "hodi-vova-40919.firebaseapp.com",
+    projectId: "hodi-vova-40919",
+    storageBucket: "hodi-vova-40919.firebasestorage.app",
+    messagingSenderId: "881000775402",
+    appId: "1:881000775402:web:419f312c98d6814d74e193"
   },
 
   // --- Мастер-пароль (регистрация/удаление участников, модерация стены) ---
