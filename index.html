@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#14213d">
+  <title>Ходи, Вова, ходи!</title>
+  <meta name="description" content="Соревнование по ежедневным шагам с виртуальным маршрутом Лондон → Париж.">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%2314213d'/><text x='50' y='68' font-size='54' text-anchor='middle' fill='%23c8a24a'>🚶</text></svg>">
+</head>
+<body>
+  <header class="app-header">
+    <span class="brass-dot"></span>
+    <h1 id="appTitle">Ходи, Вова, ходи!</h1>
+    <div class="header-badge" id="sessionBadge"></div>
+  </header>
+
+  <main>
+    <section class="view" id="view-map" role="tabpanel" aria-label="Карта"></section>
+    <section class="view" id="view-stats" role="tabpanel" aria-label="Статистика"></section>
+    <section class="view" id="view-wall" role="tabpanel" aria-label="Стена"></section>
+    <section class="view" id="view-me" role="tabpanel" aria-label="Мои данные"></section>
+    <section class="view" id="view-admin" role="tabpanel" aria-label="Админ"></section>
+  </main>
+
+  <nav class="tabbar" role="tablist" aria-label="Разделы">
+    <button class="tab" data-tab="map"   role="tab"><span class="ic">🗺️</span>Карта</button>
+    <button class="tab" data-tab="stats" role="tab"><span class="ic">📊</span>Статистика</button>
+    <button class="tab" data-tab="wall"  role="tab"><span class="ic">💬</span>Стена</button>
+    <button class="tab" data-tab="me"    role="tab"><span class="ic">👟</span>Мои данные</button>
+    <button class="tab" data-tab="admin" role="tab"><span class="ic">🔑</span>Админ</button>
+  </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="config.js"></script>
+  <script src="icons.js"></script>
+  <script src="auth.js"></script>
+  <script src="logic.js"></script>
+  <script src="store.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
