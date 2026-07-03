@@ -76,43 +76,59 @@
 
   /* ---------- Firebase-движок (ленивая загрузка SDK v9 compat) ---------- */
   function FirebaseEngine() {
+    let fs = null, ready = false;
+    const colName = { users: "users", entries: "entries", wall: "wall" };
+    const pending = []; // подписки, запрошенные до окончания инициализации
+
+    const realSubscribe = (name, cb) => {
+      if (name === "race") {
+        return fs.doc("meta/race").onSnapshot((d) => cb(d.exists ? d.data() : { lap: 1, lapStartDate: null }));
+      }
+      let q = fs.collection(colName[name]);
+      if (name === "wall") q = q.orderBy("createdAt", "desc");
+      return q.onSnapshot((snap) => cb(snap.docs.map((d) => Object.assign({ id: d.id }, d.data()))));
+    };
+
+    // ВАЖНО: приложение подписывается сразу при загрузке, а Firebase SDK грузится
+    // асинхронно. Поэтому раннюю подписку ставим в очередь и активируем, как только
+    // всё готово. Иначе state никогда не наполнится и вход/списки будут пустыми.
+    Store.subscribe = (name, cb) => {
+      if (ready) return realSubscribe(name, cb);
+      const h = { name, cb, unsub: null, cancelled: false };
+      pending.push(h);
+      return () => { h.cancelled = true; if (h.unsub) h.unsub(); };
+    };
+
+    const whenReady = () => Store.ready; // записи ждут инициализации
+    Store.upsertUser = (u) => whenReady().then(() => fs.doc("users/" + u.login).set(u));
+    Store.deleteUser = (login) => whenReady().then(async () => {
+      const batch = fs.batch();
+      batch.delete(fs.doc("users/" + login));
+      const es = await fs.collection("entries").where("login", "==", login).get();
+      es.forEach((d) => batch.delete(d.ref));
+      return batch.commit();
+    });
+    Store.setEntry = (e) => whenReady().then(() => fs.doc("entries/" + e.login + "__" + e.date).set(e));
+    Store.deleteEntry = (login, date) => whenReady().then(() => fs.doc("entries/" + login + "__" + date).delete());
+    Store.addWall = (m) => whenReady().then(() => fs.collection("wall").add(m));
+    Store.deleteWall = (id) => whenReady().then(() => fs.doc("wall/" + id).delete());
+    Store.setRace = (r) => whenReady().then(() => fs.doc("meta/race").set(r));
+
     Store.ready = (async () => {
       await loadScript("https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js");
       await loadScript("https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js");
       await loadScript("https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js");
       firebase.initializeApp(cfg);
-      const auth = firebase.auth();
-      const fs = firebase.firestore();
-      await auth.signInAnonymously().catch((e) => console.warn("Anon auth:", e));
-
-      const colName = { users: "users", entries: "entries", wall: "wall" };
-
-      Store.subscribe = (name, cb) => {
-        if (name === "race") {
-          return fs.doc("meta/race").onSnapshot((d) => cb(d.exists ? d.data() : { lap: 1, lapStartDate: null }));
-        }
-        let q = fs.collection(colName[name]);
-        if (name === "wall") q = q.orderBy("createdAt", "desc");
-        return q.onSnapshot((snap) => cb(snap.docs.map((d) => Object.assign({ id: d.id }, d.data()))));
-      };
-      Store.upsertUser = (u) => fs.doc("users/" + u.login).set(u);
-      Store.deleteUser = async (login) => {
-        const batch = fs.batch();
-        batch.delete(fs.doc("users/" + login));
-        const es = await fs.collection("entries").where("login", "==", login).get();
-        es.forEach((d) => batch.delete(d.ref));
-        return batch.commit();
-      };
-      Store.setEntry = (e) => fs.doc("entries/" + e.login + "__" + e.date).set(e);
-      Store.deleteEntry = (login, date) => fs.doc("entries/" + login + "__" + date).delete();
-      Store.addWall = (m) => fs.collection("wall").add(m);
-      Store.deleteWall = (id) => fs.doc("wall/" + id).delete();
-      Store.setRace = (r) => fs.doc("meta/race").set(r);
+      fs = firebase.firestore();
+      // Анонимный вход — необязателен (может быть не включён); ошибку глотаем.
+      try { await firebase.auth().signInAnonymously(); } catch (e) { console.warn("Anon auth:", e && e.code); }
+      ready = true;
+      pending.forEach((h) => { if (!h.cancelled) h.unsub = realSubscribe(h.name, h.cb); });
     })().catch((err) => {
       console.error("Firebase недоступен, переключаюсь на локальный режим:", err);
       Store.mode = "local";
-      LocalEngine();
-      return Store.ready;
+      LocalEngine(); // переопределит subscribe/методы и синхронно доставит данные
+      pending.forEach((h) => { if (!h.cancelled) h.unsub = Store.subscribe(h.name, h.cb); });
     });
   }
 

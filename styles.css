@@ -201,6 +201,8 @@ table.grid tfoot td { font-weight: 800; background: var(--paper-2); }
   display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line);
 }
 .entry:last-child, .plist-item:last-child { border-bottom: none; }
+.plist-item { flex-wrap: wrap; }
+.plist-item.editing { background: rgba(200,162,74,.12); border-radius: 8px; padding-left: 6px; padding-right: 6px; }
 .entry .e-date { font-weight: 700; width: 92px; }
 .entry .e-steps { font-variant-numeric: tabular-nums; }
 .badge { display: inline-block; background: var(--paper-2); border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px; font-size: 12px; font-weight: 700; color: var(--ink-2); }

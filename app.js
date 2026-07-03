@@ -14,6 +14,7 @@
     statMonth: L.monthKey(L.today()),
     statUnit: "steps",           // steps | km
     editingDate: null,           // редактируемая запись в «Мои данные»
+    editingUser: null,           // редактируемый участник в «Админ» (логин) или null
     finishing: false             // защита от повторного сброса круга
   };
 
@@ -581,10 +582,11 @@
 
     const usersHTML = users.length ? users.map((u) => {
       const cnt = state.entries.filter((e) => e.login === u.login).length;
-      return `<div class="plist-item">
+      return `<div class="plist-item${state.editingUser === u.login ? " editing" : ""}">
         ${window.avatarSVG(u, 34)}
         <div style="flex:1"><div style="font-weight:700">${esc(u.login)}</div>
           <div class="small muted">${cnt} запис${plural(cnt)} · с ${u.createdAt ? new Date(u.createdAt).toLocaleDateString("ru-RU") : "—"}</div></div>
+        <button class="ghost small" data-edituser="${esc(u.login)}">Изменить</button>
         <button class="danger small" data-deluser="${esc(u.login)}">Удалить</button>
       </div>`;
     }).join("") : '<div class="empty small">Участников пока нет — зарегистрируйте первого.</div>';
@@ -600,17 +602,36 @@
         <div class="row"><h2 style="margin:0">Панель администратора</h2><div class="spacer"></div><button class="ghost" id="adminLogout">Выйти</button></div>
       </div>
 
-      <div class="card">
-        <h2>Регистрация участника</h2>
-        <label for="regLogin">Логин (уникальный)</label>
-        <input id="regLogin" placeholder="например, vova">
-        <label for="regPass">Пароль</label>
-        <input id="regPass" type="text" placeholder="выдайте участнику">
-        <label for="regPhoto">URL аватара (необязательно)</label>
-        <input id="regPhoto" placeholder="https://… — иначе монограмма">
-        <div id="regMsg"></div>
-        <button class="brass" id="regBtn" style="margin-top:12px">Зарегистрировать</button>
-      </div>
+      ${(() => {
+        const eu = state.editingUser ? findUser(state.editingUser) : null;
+        if (eu) {
+          return `<div class="card" id="userForm">
+            <h2>Изменение участника: ${esc(eu.login)}</h2>
+            <label for="regLogin">Логин</label>
+            <input id="regLogin" value="${esc(eu.login)}">
+            <label for="regPass">Новый пароль</label>
+            <input id="regPass" type="text" placeholder="оставьте пустым — пароль не изменится">
+            <label for="regPhoto">URL аватара (пусто — монограмма)</label>
+            <input id="regPhoto" value="${esc(eu.photoURL || "")}" placeholder="https://…">
+            <div id="regMsg"></div>
+            <div class="row" style="margin-top:12px">
+              <button class="brass" id="saveUserBtn">Сохранить изменения</button>
+              <button class="ghost" id="cancelUserBtn">Отмена</button>
+            </div>
+          </div>`;
+        }
+        return `<div class="card">
+          <h2>Регистрация участника</h2>
+          <label for="regLogin">Логин (уникальный)</label>
+          <input id="regLogin" placeholder="например, vova">
+          <label for="regPass">Пароль</label>
+          <input id="regPass" type="text" placeholder="выдайте участнику">
+          <label for="regPhoto">URL аватара (необязательно)</label>
+          <input id="regPhoto" placeholder="https://… — иначе монограмма">
+          <div id="regMsg"></div>
+          <button class="brass" id="regBtn" style="margin-top:12px">Зарегистрировать</button>
+        </div>`;
+      })()}
 
       <div class="card">
         <h2>Участники (${users.length})</h2>
@@ -627,14 +648,15 @@
       state.session.admin = false; sessionStorage.removeItem("sess.admin"); updateBadge(); toast("Выход из админ-режима"); render();
     });
 
-    $("regBtn").addEventListener("click", async () => {
+    const loginValid = (v) => /^[\wа-яА-ЯёЁ.\-]{2,20}$/.test(v) && !v.includes("__");
+
+    if ($("regBtn")) $("regBtn").addEventListener("click", async () => {
       const login = $("regLogin").value.trim();
       const pass = $("regPass").value;
       const photo = $("regPhoto").value.trim();
       const msg = $("regMsg");
       if (!login) { msg.innerHTML = '<div class="notice err">Укажите логин.</div>'; return; }
-      if (!/^[\wа-яА-ЯёЁ.\-]{2,20}$/.test(login)) { msg.innerHTML = '<div class="notice err">Логин: 2–20 символов, буквы/цифры/точка/дефис.</div>'; return; }
-      if (login.includes("__")) { msg.innerHTML = '<div class="notice err">Логин не должен содержать «__».</div>'; return; }
+      if (!loginValid(login)) { msg.innerHTML = '<div class="notice err">Логин: 2–20 символов, буквы/цифры/точка/дефис, без «__».</div>'; return; }
       if (findUser(login)) { msg.innerHTML = '<div class="notice err">Логин занят — выберите другой.</div>'; return; }
       if (!pass || pass.length < 3) { msg.innerHTML = '<div class="notice err">Пароль — минимум 3 символа.</div>'; return; }
       const cred = await A.makeCredential(pass);
@@ -642,6 +664,48 @@
       $("regLogin").value = ""; $("regPass").value = ""; $("regPhoto").value = "";
       msg.innerHTML = '<div class="notice ok">Участник «' + esc(login) + '» создан.</div>';
       toast("Участник добавлен");
+    });
+
+    // --- Редактирование участника ---
+    views.admin.querySelectorAll("[data-edituser]").forEach((b) =>
+      b.addEventListener("click", () => { state.editingUser = b.dataset.edituser; renderAdmin(); window.scrollTo({ top: 0, behavior: "smooth" }); }));
+    if ($("cancelUserBtn")) $("cancelUserBtn").addEventListener("click", () => { state.editingUser = null; renderAdmin(); });
+
+    if ($("saveUserBtn")) $("saveUserBtn").addEventListener("click", async () => {
+      const oldLogin = state.editingUser;
+      const cur = findUser(oldLogin);
+      const msg = $("regMsg");
+      if (!cur) { state.editingUser = null; return renderAdmin(); }
+      const newLogin = $("regLogin").value.trim();
+      const pass = $("regPass").value;
+      const photo = $("regPhoto").value.trim();
+      if (!loginValid(newLogin)) { msg.innerHTML = '<div class="notice err">Логин: 2–20 символов, буквы/цифры/точка/дефис, без «__».</div>'; return; }
+      if (newLogin !== oldLogin && findUser(newLogin)) { msg.innerHTML = '<div class="notice err">Логин занят — выберите другой.</div>'; return; }
+      if (pass && pass.length < 3) { msg.innerHTML = '<div class="notice err">Пароль — минимум 3 символа.</div>'; return; }
+
+      // новые учётные данные (если пароль задан — пересоздаём соль+хеш, иначе сохраняем прежние)
+      let passwordHash = cur.passwordHash, salt = cur.salt;
+      if (pass) { const c = await A.makeCredential(pass); passwordHash = c.passwordHash; salt = c.salt; }
+      const newUser = { login: newLogin, passwordHash, salt, photoURL: photo || "", createdAt: cur.createdAt || Date.now() };
+
+      if (newLogin === oldLogin) {
+        S.upsertUser(newUser);
+      } else {
+        // Переименование: логин — это идентификатор. Переносим записи, сообщения и
+        // победителя круга на новый логин, затем удаляем старую запись (и её записи).
+        S.upsertUser(newUser);
+        state.entries.filter((e) => e.login === oldLogin).forEach((e) =>
+          S.setEntry({ login: newLogin, date: e.date, steps: e.steps, createdAt: e.createdAt || Date.now(), updatedAt: Date.now() }));
+        state.wall.filter((m) => m.login === oldLogin).forEach((m) => {
+          S.deleteWall(m.id); S.addWall({ login: newLogin, text: m.text, createdAt: m.createdAt || Date.now() });
+        });
+        if (state.race && state.race.lastWinner === oldLogin) S.setRace(Object.assign({}, state.race, { lastWinner: newLogin }));
+        S.deleteUser(oldLogin); // удалит старый профиль и старые записи (уже скопированы)
+        if (state.session.login === oldLogin) { state.session.login = newLogin; sessionStorage.setItem("sess.login", newLogin); }
+      }
+      state.editingUser = null;
+      renderAdmin();
+      toast(newLogin === oldLogin ? "Участник обновлён" : "Участник переименован: " + oldLogin + " → " + newLogin);
     });
 
     views.admin.querySelectorAll("[data-deluser]").forEach((b) =>
