@@ -133,7 +133,7 @@
     return `<ellipse cx="${x + 2}" cy="${y + 21}" rx="21" ry="5" fill="#14213d" opacity="0.08"/>`
       + pine(x, y, 7) + tree(x + 14, y + 6, 6) + pine(x - 13, y + 8, 6) + tree(x + 4, y + 14, 5);
   }
-  function town(x, y, label, side) {
+  function town(x, y, label, place) {
     const roof1 = "#a3543f", roof2 = "#8f6b4a", wall = "#efe8d4", wall2 = "#e2d9c0", ln = "#8a8267", win = "#5c5648";
     const g = `<g opacity="0.95">`
       + `<ellipse cx="${x + 1}" cy="${y + 3.5}" rx="19" ry="4" fill="#14213d" opacity="0.10"/>`
@@ -150,9 +150,13 @@
       + `<line x1="${x + 1}" y1="${y - 18}" x2="${x + 1}" y2="${y - 21}" stroke="${ln}" stroke-width="0.7"/>`
       + `<circle cx="${x + 1}" cy="${y - 21.8}" r="1.1" fill="#c8a24a"/>`
       + `</g>`;
-    const tx = side === "left" ? x - 20 : x + 21;
-    const anc = side === "left" ? "end" : "start";
-    return g + `<text x="${tx}" y="${y}" text-anchor="${anc}" font-size="9.5" font-style="italic" fill="#5c6478" font-family="Georgia,'Times New Roman',serif">${label}</text>`;
+    // Подпись — по центру над/под домиком (place: "up"|"down"), с белым
+    // ореолом. Центр X зажимаем, чтобы текст не уходил за рамку карты.
+    const cx = Math.max(34, Math.min(306, x));
+    const ty = place === "down" ? y + 15 : y - 26;
+    return g + `<text x="${cx}" y="${ty}" text-anchor="middle" font-size="9.5" font-style="italic"`
+      + ` fill="#4c5468" stroke="#f4f0e2" stroke-width="2.6" paint-order="stroke" stroke-linejoin="round"`
+      + ` font-family="Georgia,'Times New Roman',serif">${label}</text>`;
   }
   function hill(x, y, w, h, c) { return `<path d="M${x} ${y} q${w / 2} ${-h} ${w} 0 z" fill="${c}" opacity="0.6"/>`; }
   function gull(x, y) { return `<path d="M${x} ${y} q3 -3 6 0 q3 -3 6 0" fill="none" stroke="#7b8496" stroke-width="1" opacity="0.6"/>`; }
@@ -220,10 +224,11 @@
       [44, 660], [300, 628], [72, 742], [300, 752], [122, 792], [278, 706], [110, 660]
     ].map(([x, y]) => forest(x, y)).join("");
 
-    // второстепенные города с подписями
+    // второстепенные города — у краёв (вне коридора маршрута) и вне полос
+    // чекпойнтов; подпись над/под домиком, чтобы не перекрывалась и не резалась
     const towns = [
-      [292, 190, "Рочестер", "left"], [58, 200, "Мейдстон", "right"], [292, 320, "Ашфорд", "left"],
-      [60, 690, "Булонь", "right"], [292, 660, "Амьен", "left"], [70, 792, "Бове", "right"], [286, 792, "Сен-Дени", "left"]
+      [292, 120, "Рочестер", "up"], [50, 168, "Мейдстон", "down"], [294, 336, "Ашфорд", "up"],
+      [54, 672, "Булонь", "down"], [292, 662, "Амьен", "up"], [58, 786, "Бове", "up"], [292, 744, "Сен-Дени", "down"]
     ].map(([x, y, l, s]) => town(x, y, l, s)).join("");
 
     // детали Ла-Манша: волны, чайки, паром, подпись
