@@ -130,49 +130,94 @@
       + `<circle cx="${x + s * 0.6}" cy="${y + s}" r="${s * 0.7}" fill="#6b9350"/></g>`;
   }
   function forest(x, y) {
-    return pine(x, y, 7) + tree(x + 14, y + 6, 6) + pine(x - 13, y + 8, 6) + tree(x + 4, y + 14, 5);
+    return `<ellipse cx="${x + 2}" cy="${y + 21}" rx="21" ry="5" fill="#14213d" opacity="0.08"/>`
+      + pine(x, y, 7) + tree(x + 14, y + 6, 6) + pine(x - 13, y + 8, 6) + tree(x + 4, y + 14, 5);
   }
   function town(x, y, label, side) {
-    const g = `<g opacity="0.9">`
-      + `<rect x="${x - 11}" y="${y - 7}" width="8" height="9" fill="#cfc8b2" stroke="#8a8267" stroke-width="0.5"/>`
-      + `<polygon points="${x - 11},${y - 7} ${x - 7},${y - 12} ${x - 3},${y - 7}" fill="#9a5b4a"/>`
-      + `<rect x="${x - 1}" y="${y - 10}" width="9" height="12" fill="#ddd6c3" stroke="#8a8267" stroke-width="0.5"/>`
-      + `<polygon points="${x - 1},${y - 10} ${x + 3.5},${y - 15} ${x + 8},${y - 10}" fill="#9a5b4a"/>`
-      + `<rect x="${x + 9}" y="${y - 5}" width="6" height="7" fill="#cfc8b2" stroke="#8a8267" stroke-width="0.5"/></g>`;
-    const tx = side === "left" ? x - 14 : x + 17;
+    const roof1 = "#a3543f", roof2 = "#8f6b4a", wall = "#efe8d4", wall2 = "#e2d9c0", ln = "#8a8267", win = "#5c5648";
+    const g = `<g opacity="0.95">`
+      + `<ellipse cx="${x + 1}" cy="${y + 3.5}" rx="19" ry="4" fill="#14213d" opacity="0.10"/>`
+      + `<rect x="${x - 14}" y="${y - 8}" width="9" height="11" fill="${wall}" stroke="${ln}" stroke-width="0.6"/>`
+      + `<polygon points="${x - 15},${y - 8} ${x - 9.5},${y - 13.5} ${x - 4},${y - 8}" fill="${roof1}"/>`
+      + `<rect x="${x - 4}" y="${y - 12}" width="10" height="15" fill="${wall2}" stroke="${ln}" stroke-width="0.6"/>`
+      + `<polygon points="${x - 5},${y - 12} ${x + 1},${y - 18} ${x + 7},${y - 12}" fill="${roof2}"/>`
+      + `<rect x="${x + 7}" y="${y - 6}" width="8" height="9" fill="${wall}" stroke="${ln}" stroke-width="0.6"/>`
+      + `<polygon points="${x + 6},${y - 6} ${x + 11},${y - 10.5} ${x + 16},${y - 6}" fill="${roof1}"/>`
+      + `<rect x="${x - 11.5}" y="${y - 5}" width="2.2" height="2.6" fill="${win}"/>`
+      + `<rect x="${x - 1}" y="${y - 9}" width="2.2" height="2.6" fill="${win}"/>`
+      + `<rect x="${x + 2.5}" y="${y - 9}" width="2.2" height="2.6" fill="${win}"/>`
+      + `<rect x="${x + 9.5}" y="${y - 3.5}" width="2.2" height="2.6" fill="${win}"/>`
+      + `<line x1="${x + 1}" y1="${y - 18}" x2="${x + 1}" y2="${y - 21}" stroke="${ln}" stroke-width="0.7"/>`
+      + `<circle cx="${x + 1}" cy="${y - 21.8}" r="1.1" fill="#c8a24a"/>`
+      + `</g>`;
+    const tx = side === "left" ? x - 20 : x + 21;
     const anc = side === "left" ? "end" : "start";
-    return g + `<text x="${tx}" y="${y}" text-anchor="${anc}" font-size="9" fill="#6a6f80" font-family="system-ui,sans-serif">${label}</text>`;
+    return g + `<text x="${tx}" y="${y}" text-anchor="${anc}" font-size="9.5" font-style="italic" fill="#5c6478" font-family="Georgia,'Times New Roman',serif">${label}</text>`;
   }
   function hill(x, y, w, h, c) { return `<path d="M${x} ${y} q${w / 2} ${-h} ${w} 0 z" fill="${c}" opacity="0.6"/>`; }
   function gull(x, y) { return `<path d="M${x} ${y} q3 -3 6 0 q3 -3 6 0" fill="none" stroke="#7b8496" stroke-width="1" opacity="0.6"/>`; }
 
   function mapScenery() {
+    const T = YW_TOP, B = YW_BOT, mid = (YW_TOP + YW_BOT) / 2;
     const defs = `<defs>
-      <linearGradient id="landTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9f3de"/><stop offset="1" stop-color="#dcebcd"/></linearGradient>
-      <linearGradient id="landBot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2eecf"/><stop offset="1" stop-color="#eaf3df"/></linearGradient>
-      <linearGradient id="chan" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9dcd7"/><stop offset="0.5" stop-color="#7ec7c0"/><stop offset="1" stop-color="#a9dcd7"/></linearGradient>
+      <linearGradient id="landTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef4dd"/><stop offset="0.8" stop-color="#dcebc8"/><stop offset="1" stop-color="#d2e4bc"/></linearGradient>
+      <linearGradient id="landBot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6e6c0"/><stop offset="0.25" stop-color="#dfecca"/><stop offset="1" stop-color="#eaf2da"/></linearGradient>
+      <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fd4cd"/><stop offset="0.5" stop-color="#5eb0a8"/><stop offset="1" stop-color="#9fd4cd"/></linearGradient>
       <linearGradient id="riv" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8fc3e6"/><stop offset="1" stop-color="#6fb0dd"/></linearGradient>
+      <radialGradient id="vign" cx="0.5" cy="0.5" r="0.75"><stop offset="0.62" stop-color="#5a4a22" stop-opacity="0"/><stop offset="1" stop-color="#5a4a22" stop-opacity="0.16"/></radialGradient>
+      <filter id="noiseF" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="matrix" values="0 0 0 0 0.42  0 0 0 0 0.36  0 0 0 0 0.24  0 0 0 0.05 0"/></filter>
     </defs>`;
 
-    const land = `<rect x="0" y="0" width="${MAP.W}" height="${YW_TOP}" fill="url(#landTop)"/>`
-      + `<rect x="0" y="${YW_TOP}" width="${MAP.W}" height="${YW_BOT - YW_TOP}" fill="url(#chan)"/>`
-      + `<rect x="0" y="${YW_BOT}" width="${MAP.W}" height="${MAP.H - YW_BOT}" fill="url(#landBot)"/>`
-      // мягкие волнистые кромки берегов
-      + `<path d="M0 ${YW_TOP} q28 8 56 0 t56 0 t56 0 t56 0 t56 0 t56 0 V${YW_TOP - 10} H0 Z" fill="url(#landTop)"/>`
-      + `<path d="M0 ${YW_BOT} q28 -8 56 0 t56 0 t56 0 t56 0 t56 0 t56 0 V${YW_BOT + 10} H0 Z" fill="url(#landBot)"/>`;
+    // море с глубинными контурами
+    const sea = `<rect x="0" y="${T - 26}" width="${MAP.W}" height="${B - T + 52}" fill="url(#sea)"/>`
+      + `<path d="M0 ${mid - 26} C 60 ${mid - 34}, 150 ${mid - 16}, 230 ${mid - 26} S 320 ${mid - 30}, 340 ${mid - 24}" fill="none" stroke="#4b9a92" stroke-width="1" opacity="0.5"/>`
+      + `<path d="M0 ${mid + 24} C 70 ${mid + 16}, 160 ${mid + 34}, 250 ${mid + 22} S 330 ${mid + 18}, 340 ${mid + 26}" fill="none" stroke="#4b9a92" stroke-width="1" opacity="0.4"/>`;
+
+    // Англия: неровное побережье, пляж, кромка, меловые скалы у Дувра
+    const coastEng = `M0 ${T - 8} C 26 ${T - 18}, 52 ${T + 2}, 78 ${T - 2} C 92 ${T - 4}, 100 ${T + 3}, 118 ${T + 6} C 146 ${T + 11}, 168 ${T - 6}, 196 ${T - 4} C 232 ${T - 1}, 258 ${T + 9}, 292 ${T + 1} C 312 ${T - 4}, 328 ${T + 3}, 340 ${T - 2}`;
+    const engLand = `<path d="${coastEng} L340 0 L0 0 Z" fill="url(#landTop)"/>`
+      + `<path d="${coastEng}" fill="none" stroke="#e6d6a4" stroke-width="5" opacity="0.85"/>`
+      + `<path d="${coastEng}" fill="none" stroke="#8a8267" stroke-width="0.8" opacity="0.55"/>`
+      + `<path d="M56 ${T - 1} L70 ${T - 9} L84 ${T - 2} L98 ${T - 10} L112 ${T - 1} L126 ${T - 7} L136 ${T + 3} L56 ${T + 3} Z" fill="#f7f4ea" stroke="#c9c2ae" stroke-width="0.7" opacity="0.95"/>`;
+
+    // Франция: северный берег
+    const coastFr = `M0 ${B + 6} C 34 ${B + 14}, 62 ${B - 4}, 96 ${B + 2} C 132 ${B + 9}, 172 ${B - 8}, 210 ${B - 2} C 236 ${B + 2}, 252 ${B - 6}, 278 ${B + 2} C 306 ${B + 10}, 324 ${B - 2}, 340 ${B + 4}`;
+    const frLand = `<path d="${coastFr} L340 ${MAP.H} L0 ${MAP.H} Z" fill="url(#landBot)"/>`
+      + `<path d="${coastFr}" fill="none" stroke="#e6d6a4" stroke-width="5" opacity="0.85"/>`
+      + `<path d="${coastFr}" fill="none" stroke="#8a8267" stroke-width="0.8" opacity="0.55"/>`;
+
+    // пена у берегов
+    const foam = `<path d="M0 ${T + 12} C 40 ${T + 18}, 90 ${T + 14}, 140 ${T + 20} S 250 ${T + 16}, 340 ${T + 14}" fill="none" stroke="#ffffff" stroke-width="1.3" stroke-dasharray="7 6" opacity="0.55"/>`
+      + `<path d="M0 ${B - 14} C 60 ${B - 20}, 130 ${B - 12}, 200 ${B - 18} S 300 ${B - 14}, 340 ${B - 18}" fill="none" stroke="#ffffff" stroke-width="1.3" stroke-dasharray="7 6" opacity="0.5"/>`;
+
+    // сетка старинной карты
+    let grid = "";
+    for (let gx = 68; gx < MAP.W; gx += 68) grid += `<line x1="${gx}" y1="0" x2="${gx}" y2="${MAP.H}" stroke="#14213d" stroke-width="0.5" opacity="0.045"/>`;
+    for (let gy = 82; gy < MAP.H; gy += 82) grid += `<line x1="0" y1="${gy}" x2="${MAP.W}" y2="${gy}" stroke="#14213d" stroke-width="0.5" opacity="0.045"/>`;
+
+    // лоскутные поля
+    const field = (x, y, w, h, rot, c) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" transform="rotate(${rot} ${x + w / 2} ${y + h / 2})" fill="${c}" stroke="#c6bd97" stroke-width="0.6" opacity="0.75"/>`;
+    const fields = field(20, 252, 34, 22, -6, "#e9e3c2") + field(58, 262, 30, 20, 4, "#dfe8bf") + field(26, 282, 30, 18, 2, "#e6d9b8")
+      + field(240, 236, 34, 20, 5, "#e9e3c2") + field(212, 258, 28, 18, -4, "#dfe8bf")
+      + field(196, 700, 34, 22, -5, "#e9e3c2") + field(236, 712, 30, 18, 6, "#e6d9b8") + field(206, 728, 26, 16, 3, "#dfe8bf")
+      + field(16, 620, 30, 20, 4, "#dfe8bf") + field(50, 634, 28, 18, -6, "#e9e3c2");
 
     // холмы и облака
     const hills = hill(-10, 96, 120, 34, "#c7dca6") + hill(90, 104, 150, 40, "#bcd39a") + hill(240, 92, 140, 32, "#c7dca6")
       + `<ellipse class="cloud-a" cx="70" cy="34" rx="26" ry="10" fill="#ffffff" opacity="0.65"/><ellipse class="cloud-b" cx="255" cy="26" rx="30" ry="11" fill="#ffffff" opacity="0.6"/>`;
 
-    // реки (Темза на севере, Сомма/Сена на юге) — декоративные
-    const rivers = `<path d="M-5 132 C60 112,95 156,150 134 S255 156,345 128" fill="none" stroke="url(#riv)" stroke-width="5" opacity="0.55" stroke-linecap="round"/>`
-      + `<path d="M-5 716 C70 700,110 742,175 720 S280 700,345 724" fill="none" stroke="url(#riv)" stroke-width="5" opacity="0.55" stroke-linecap="round"/>`;
+    // реки (Темза на севере, Сомма/Сена на юге) — с мягкой подложкой берега
+    const riverPath = (d) =>
+      `<path d="${d}" fill="none" stroke="#5f93b8" stroke-width="6.5" opacity="0.28" stroke-linecap="round"/>`
+      + `<path d="${d}" fill="none" stroke="url(#riv)" stroke-width="4" opacity="0.75" stroke-linecap="round"/>`
+      + `<path d="${d}" fill="none" stroke="#dcefff" stroke-width="1.1" opacity="0.6" stroke-linecap="round"/>`;
+    const rivers = riverPath("M-5 132 C60 112,95 156,150 134 S255 156,345 128")
+      + riverPath("M-5 716 C70 700,110 742,175 720 S280 700,345 724");
 
     // леса (только на суше, вне пролива)
     const woods = [
-      [42, 150], [300, 118], [70, 250], [305, 236], [44, 348], [302, 356], [122, 78], [258, 392], [30, 300],
-      [44, 636], [300, 628], [72, 742], [300, 752], [122, 792], [278, 706], [40, 712]
+      [42, 150], [300, 118], [104, 240], [305, 300], [44, 348], [302, 356], [122, 78], [258, 392], [30, 316],
+      [44, 660], [300, 628], [72, 742], [300, 752], [122, 792], [278, 706], [110, 660]
     ].map(([x, y]) => forest(x, y)).join("");
 
     // второстепенные города с подписями
@@ -192,7 +237,33 @@
       <path d="M0 10 h34 l-5 9 h-24 z" fill="#3b4a63"/><rect x="8" y="2" width="16" height="9" fill="#e9e3d2"/>
       <rect x="15" y="-8" width="2" height="10" fill="#8a8267"/><rect x="17" y="-8" width="7" height="5" fill="#d1495b"/></g></g>`;
     const gulls = gull(MAP.CX + 40, YW_TOP + 30) + gull(MAP.CX + 58, YW_TOP + 40) + gull(60, YW_BOT - 34);
-    const label = `<text x="322" y="${midY}" text-anchor="middle" transform="rotate(90 322 ${midY})" font-size="11" font-weight="700" fill="#2f8f88" letter-spacing="1">ЛА-МАНШ</text>`;
+    const label = `<text x="322" y="${midY}" text-anchor="middle" transform="rotate(90 322 ${midY})" font-size="12" font-style="italic" font-weight="700" fill="#256f69" letter-spacing="2.5" font-family="Georgia,'Times New Roman',serif" opacity="0.85">ЛА-МАНШ</text>`;
+
+    // пирс Кале с лодочкой у причала
+    const pier = `<path d="M266 ${B} v-14 h14" fill="none" stroke="#6f6a58" stroke-width="2.6" opacity="0.85"/>`
+      + `<ellipse cx="286" cy="${B - 15}" rx="4" ry="2" fill="#9a5b4a"/>`;
+
+    // морской змей — классика старинных карт
+    const monster = `<g opacity="0.75" class="boat-bob">`
+      + `<path d="M228 552 q8 -12 16 0 q8 12 16 0 q8 -12 16 0" fill="none" stroke="#2b7f78" stroke-width="3" stroke-linecap="round"/>`
+      + `<path d="M228 552 q-5 4 -9 1" fill="none" stroke="#2b7f78" stroke-width="2" stroke-linecap="round"/>`
+      + `<circle cx="279" cy="547" r="3.6" fill="#2b7f78"/>`
+      + `<circle cx="280.6" cy="546" r="0.9" fill="#ffffff"/>`
+      + `<path d="M278 543.5 l-1.5 -3 M281 543.5 l1.5 -3" stroke="#2b7f78" stroke-width="1.2" stroke-linecap="round"/></g>`;
+
+    // роза ветров
+    const compass = `<g transform="translate(58 468)" opacity="0.9">`
+      + `<circle r="20" fill="#f7f2e2" stroke="#8a8267" stroke-width="1"/>`
+      + `<circle r="15.5" fill="none" stroke="#c9bf9f" stroke-width="0.7"/>`
+      + `<polygon points="0,-16 2.6,-2.6 16,0 2.6,2.6 0,16 -2.6,2.6 -16,0 -2.6,-2.6" fill="#14213d"/>`
+      + `<polygon points="0,-10 2,-2 10,0 2,2 0,10 -2,2 -10,0 -2,-2" transform="rotate(45)" fill="#c8a24a"/>`
+      + `<polygon points="0,-16 2.6,-2.6 0,0 -2.6,-2.6" fill="#d1495b"/>`
+      + `<circle r="2" fill="#f7f2e2" stroke="#14213d" stroke-width="1"/>`
+      + `<text y="-24.5" text-anchor="middle" font-size="9" font-weight="700" fill="#14213d" font-family="Georgia,serif">С</text></g>`;
+
+    // бумажная текстура и виньетка (поверх сцены, под маршрутом)
+    const paper = `<rect x="0" y="0" width="${MAP.W}" height="${MAP.H}" filter="url(#noiseF)" opacity="0.55"/>`
+      + `<rect x="0" y="0" width="${MAP.W}" height="${MAP.H}" fill="url(#vign)"/>`;
 
     // дополнительные достопримечательности и детали
     const extras =
@@ -232,7 +303,8 @@
       + `<g opacity="0.95"><rect x="222" y="752" width="18" height="16" fill="#e8e0cc" stroke="#8a8267" stroke-width="0.7"/>`
       + `<path d="M227 768 v-8 a4 4 0 0 1 8 0 v8 z" fill="#7a7565"/></g>`;
 
-    return defs + land + hills + rivers + woods + towns + waves + ferry + extras + gulls + label;
+    return defs + sea + engLand + frLand + foam + grid + fields + hills + rivers + woods + towns
+      + waves + pier + ferry + extras + monster + gulls + compass + label + paper;
   }
   const MAP_SCENERY = mapScenery();
 
@@ -243,10 +315,24 @@
       const fin = cp.share === 100;
       return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.4" fill="#fff" stroke="${fin ? "var(--danger)" : "var(--brass-2)"}" stroke-width="2"/>`;
     }).join("");
-    return `<path d="${full}" fill="none" stroke="#cbb98f" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>`
-      + `<path class="route-anim" d="${full}" fill="none" stroke="var(--brass-2)" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="0.1 9"/>`
-      + `<path class="route-anim" d="${water}" fill="none" stroke="var(--water)" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="0.1 9"/>`
-      + dots;
+    // километровые отметки вдоль маршрута (каждые 100 км)
+    let ticks = "";
+    for (let km = 100; km < C.TOTAL_ROUTE_KM; km += 100) {
+      const p = km / C.TOTAL_ROUTE_KM;
+      const { x, y } = routeXY(p);
+      const side = x >= MAP.CX ? 1 : -1;
+      ticks += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2" fill="#fff" stroke="#7a5c12" stroke-width="1.2"/>`
+        + `<text x="${(x + side * 9).toFixed(1)}" y="${(y + 3).toFixed(1)}" font-size="8" fill="#7a5c12" text-anchor="${side > 0 ? "start" : "end"}" font-family="Georgia,serif" font-style="italic">${km} км</text>`;
+    }
+    // двойная рамка старинной карты — поверх всего
+    const frame = `<rect x="2" y="2" width="${MAP.W - 4}" height="${MAP.H - 4}" rx="11" fill="none" stroke="#b89a55" stroke-width="2" opacity="0.9"/>`
+      + `<rect x="7" y="7" width="${MAP.W - 14}" height="${MAP.H - 14}" rx="8" fill="none" stroke="#b89a55" stroke-width="0.7" opacity="0.65"/>`;
+
+    return `<path d="${full}" fill="none" stroke="#6b5626" stroke-width="6.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.32"/>`
+      + `<path d="${full}" fill="none" stroke="#f7eed6" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>`
+      + `<path class="route-anim" d="${full}" fill="none" stroke="var(--brass-2)" stroke-width="3" stroke-linecap="round" stroke-dasharray="0.1 9"/>`
+      + `<path class="route-anim" d="${water}" fill="none" stroke="var(--water)" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="0.1 9"/>`
+      + ticks + dots + frame;
   }
 
   /* ===================================================================
