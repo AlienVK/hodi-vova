@@ -55,7 +55,12 @@
 
   ["users", "entries", "wall", "race"].forEach((name) =>
     S.subscribe(name, (data) => {
-      if (name === "race") state.race = data || { lap: 1, lapStartDate: null };
+      if (name === "race") {
+        // конфетти при завершении круга — срабатывает и у зрителей (live-обновление)
+        const prevLap = state.loaded.race ? (state.race && state.race.lap) || 1 : null;
+        state.race = data || { lap: 1, lapStartDate: null };
+        if (prevLap && (state.race.lap || 1) > prevLap) celebrate();
+      }
       else state[name] = data || [];
       state.loaded[name] = true;
       maybeAdvanceLap();
@@ -158,7 +163,7 @@
 
     // холмы и облака
     const hills = hill(-10, 96, 120, 34, "#c7dca6") + hill(90, 104, 150, 40, "#bcd39a") + hill(240, 92, 140, 32, "#c7dca6")
-      + `<ellipse cx="70" cy="34" rx="26" ry="10" fill="#ffffff" opacity="0.65"/><ellipse cx="255" cy="26" rx="30" ry="11" fill="#ffffff" opacity="0.6"/>`;
+      + `<ellipse class="cloud-a" cx="70" cy="34" rx="26" ry="10" fill="#ffffff" opacity="0.65"/><ellipse class="cloud-b" cx="255" cy="26" rx="30" ry="11" fill="#ffffff" opacity="0.6"/>`;
 
     // реки (Темза на севере, Сомма/Сена на юге) — декоративные
     const rivers = `<path d="M-5 132 C60 112,95 156,150 134 S255 156,345 128" fill="none" stroke="url(#riv)" stroke-width="5" opacity="0.55" stroke-linecap="round"/>`
@@ -183,13 +188,51 @@
       const wy = YW_TOP + 26 + k * ((YW_BOT - YW_TOP - 40) / 2);
       waves += `<path d="M14 ${wy} q18 -7 36 0 t36 0 t36 0 t36 0 t36 0 t36 0 t36 0" fill="none" stroke="#ffffff" stroke-width="1.4" opacity="0.35"/>`;
     }
-    const ferry = `<g transform="translate(${MAP.CX - 70} ${midY - 18})">
+    const ferry = `<g transform="translate(${MAP.CX - 70} ${midY - 18})"><g class="ferry-bob">
       <path d="M0 10 h34 l-5 9 h-24 z" fill="#3b4a63"/><rect x="8" y="2" width="16" height="9" fill="#e9e3d2"/>
-      <rect x="15" y="-8" width="2" height="10" fill="#8a8267"/><rect x="17" y="-8" width="7" height="5" fill="#d1495b"/></g>`;
+      <rect x="15" y="-8" width="2" height="10" fill="#8a8267"/><rect x="17" y="-8" width="7" height="5" fill="#d1495b"/></g></g>`;
     const gulls = gull(MAP.CX + 40, YW_TOP + 30) + gull(MAP.CX + 58, YW_TOP + 40) + gull(60, YW_BOT - 34);
     const label = `<text x="322" y="${midY}" text-anchor="middle" transform="rotate(90 322 ${midY})" font-size="11" font-weight="700" fill="#2f8f88" letter-spacing="1">ЛА-МАНШ</text>`;
 
-    return defs + land + hills + rivers + woods + towns + waves + ferry + gulls + label;
+    // дополнительные достопримечательности и детали
+    const extras =
+      // самолёт с инверсионным следом (небо над Лондоном)
+      `<line x1="14" y1="58" x2="56" y2="58" stroke="#ffffff" stroke-width="2" stroke-dasharray="6 5" opacity="0.7"/>`
+      + `<path d="M56 52 l17 6 l-17 6 l5 -6 z" fill="#3b4a63" opacity="0.85"/>`
+      // Биг-Бен у берега Темзы
+      + `<g opacity="0.95"><rect x="100" y="98" width="10" height="30" fill="#cfc8b2" stroke="#8a8267" stroke-width="0.7"/>`
+      + `<polygon points="100,98 105,88 110,98" fill="#9a5b4a"/>`
+      + `<circle cx="105" cy="106" r="3" fill="#ffffff" stroke="#8a8267" stroke-width="0.7"/>`
+      + `<line x1="105" y1="106" x2="105" y2="103.6" stroke="#3b3a36" stroke-width="0.7"/>`
+      + `<line x1="105" y1="106" x2="107" y2="106" stroke="#3b3a36" stroke-width="0.7"/></g>`
+      // овцы на английском лугу
+      + [[140, 296], [156, 304], [170, 294]].map(([sx, sy]) =>
+        `<g opacity="0.9"><ellipse cx="${sx}" cy="${sy}" rx="7" ry="5" fill="#f4f1e8" stroke="#8a8267" stroke-width="0.6"/>`
+        + `<circle cx="${sx + 6.5}" cy="${sy - 2}" r="2.6" fill="#3b3a36"/>`
+        + `<rect x="${sx - 4}" y="${sy + 4}" width="1.6" height="4" fill="#3b3a36"/>`
+        + `<rect x="${sx + 2}" y="${sy + 4}" width="1.6" height="4" fill="#3b3a36"/></g>`).join("")
+      // маяк на скалах Дувра
+      + `<g opacity="0.95"><ellipse cx="306" cy="${YW_TOP - 6}" rx="12" ry="4" fill="#c9c2ae"/>`
+      + `<rect x="301" y="${YW_TOP - 34}" width="10" height="26" fill="#f4f1e8" stroke="#8a8267" stroke-width="0.8"/>`
+      + `<rect x="301" y="${YW_TOP - 29}" width="10" height="5" fill="#d1495b"/>`
+      + `<rect x="301" y="${YW_TOP - 19}" width="10" height="5" fill="#d1495b"/>`
+      + `<rect x="299" y="${YW_TOP - 39}" width="14" height="5" fill="#14213d"/>`
+      + `<circle cx="306" cy="${YW_TOP - 41}" r="2.5" fill="#ffd76a"/></g>`
+      // парусник в проливе
+      + `<g class="boat-bob"><path d="M52 ${midY + 38} h24 l-5 7 h-15 z" fill="#9a5b4a"/>`
+      + `<path d="M64 ${midY + 36} v-17 l11 17 z" fill="#ffffff"/>`
+      + `<path d="M62 ${midY + 36} v-13 l-9 13 z" fill="#ece7da"/></g>`
+      // мельница в полях Пикардии
+      + `<g opacity="0.95"><path d="M136 708 l3 -18 h5 l3 18 z" fill="#b98d5f" stroke="#8a8267" stroke-width="0.6"/>`
+      + `<g stroke="#6f5a3a" stroke-width="2" stroke-linecap="round">`
+      + `<line x1="141.5" y1="690" x2="131" y2="679"/><line x1="141.5" y1="690" x2="152" y2="679"/>`
+      + `<line x1="141.5" y1="690" x2="131" y2="701"/><line x1="141.5" y1="690" x2="152" y2="701"/></g>`
+      + `<circle cx="141.5" cy="690" r="1.8" fill="#3b3a36"/></g>`
+      // Триумфальная арка на подходе к Парижу
+      + `<g opacity="0.95"><rect x="222" y="752" width="18" height="16" fill="#e8e0cc" stroke="#8a8267" stroke-width="0.7"/>`
+      + `<path d="M227 768 v-8 a4 4 0 0 1 8 0 v8 z" fill="#7a7565"/></g>`;
+
+    return defs + land + hills + rivers + woods + towns + waves + ferry + extras + gulls + label;
   }
   const MAP_SCENERY = mapScenery();
 
@@ -201,8 +244,8 @@
       return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.4" fill="#fff" stroke="${fin ? "var(--danger)" : "var(--brass-2)"}" stroke-width="2"/>`;
     }).join("");
     return `<path d="${full}" fill="none" stroke="#cbb98f" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>`
-      + `<path d="${full}" fill="none" stroke="var(--brass-2)" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="0.1 9"/>`
-      + `<path d="${water}" fill="none" stroke="var(--water)" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="0.1 9"/>`
+      + `<path class="route-anim" d="${full}" fill="none" stroke="var(--brass-2)" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="0.1 9"/>`
+      + `<path class="route-anim" d="${water}" fill="none" stroke="var(--water)" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="0.1 9"/>`
       + dots;
   }
 
@@ -225,7 +268,7 @@
       const leader = prog[0] && prog[0].login === p.login && p.km > 0;
       const pos = routePos(Math.min(1, p.pct / 100));
       return `<div class="chip${leader ? " leader" : ""}" style="left:${pos.left}%;top:${pos.top}%;transform:translate(calc(-50% + ${off}px),-50%)" title="${esc(p.login)} — ${L.fmtKm(p.km)} км">
-        ${window.avatarSVG(p.user, 24)}<span>${esc(p.login)}</span><span class="chip-pct">${Math.round(p.pct)}%</span>
+        ${window.avatarSVG(p.user, 24)}<span>${leader ? "👑 " : ""}${esc(p.login)}</span><span class="chip-pct">${Math.round(p.pct)}%</span>
       </div>`;
     }).join("");
 
@@ -245,17 +288,19 @@
     const mapSVG = `<svg class="map-bg" viewBox="0 0 ${MAP.W} ${MAP.H}" preserveAspectRatio="none" aria-hidden="true">${MAP_SCENERY}${mapRouteSVG()}</svg>`;
 
     const winnerLine = race.lastWinner
-      ? `Победитель круга №${(race.lap || 1) - 1}: <span class="winner">${esc(race.lastWinner)}</span>`
+      ? `🏆 Победитель круга №${(race.lap || 1) - 1}: <span class="winner">${esc(race.lastWinner)}</span>`
       : `Первый круг ещё идёт — победителей пока нет`;
+    const teamKm = L.stepsToKm(state.entries.reduce((s, e) => s + (Number(e.steps) || 0), 0));
 
     const whoHTML = prog.length ? prog.map((p, i) => `
       <div class="who">
-        <div class="rank-pos ${i === 0 && p.km > 0 ? "first" : ""}">${i + 1}</div>
+        <div class="rank-pos ${i === 0 && p.km > 0 ? "first" : i === 1 && p.km > 0 ? "p2" : i === 2 && p.km > 0 ? "p3" : ""}">${i + 1}</div>
         ${window.avatarSVG(p.user, 34)}
         <div style="flex:1">
           <div class="who-name">${esc(p.login)}</div>
           <div class="who-bar"><i style="width:${p.pct}%"></i></div>
           <div class="who-meta">${L.fmtKm(p.km)} км · ${Math.round(p.pct)}% · пройдено: ${esc(p.passed.name)}</div>
+          ${p.km > 0 ? `<div class="who-meta">${p.pct >= 100 ? "🏁 на финише!" : whoForecast(p)}</div>` : ""}
         </div>
       </div>`).join("") : emptyBlock("👣", "Пока никто не сделал ни шага", "Внесите шаги во вкладке «Мои данные».");
 
@@ -265,6 +310,7 @@
         <div class="lapmeta">
           <div>Текущий круг · Лондон → Париж (${L.fmtKm(C.TOTAL_ROUTE_KM)} км)</div>
           <div>${winnerLine}</div>
+          <div style="opacity:.85">Команда суммарно: <b>${L.fmtKm(teamKm)} км</b> · ${L.fmtKm(teamKm / C.TOTAL_ROUTE_KM)}× маршрута</div>
         </div>
       </div>
       <div class="card map">
@@ -295,10 +341,11 @@
     // Рейтинг за выбранный месяц (по шагам, OQ-8)
     const ranking = L.monthlyRanking(state.users, state.entries, state.statMonth);
     const maxSteps = Math.max(1, ...ranking.map((r) => r.steps));
+    const medal = (i, v) => (v > 0 && i < 3 ? ["🥇 ", "🥈 ", "🥉 "][i] : "");
     const barsHTML = ranking.some((r) => r.steps > 0)
       ? ranking.map((r, i) => `
         <div class="bar-row">
-          <div class="bar-name">${i === 0 ? "🥇 " : ""}${esc(r.user.login)}</div>
+          <div class="bar-name">${medal(i, r.steps)}${esc(r.user.login)}</div>
           <div class="bar-track"><div class="bar-fill" style="width:${r.steps / maxSteps * 100}%"></div></div>
           <div class="bar-val">${L.fmtInt(r.steps)}</div>
         </div>`).join("")
@@ -349,6 +396,11 @@
         </div>
         <p class="small muted" style="margin:6px 0 12px">Основной рейтинг — по количеству шагов (OQ-8).</p>
         <div class="bars">${barsHTML}</div>
+      </div>
+
+      <div class="card">
+        <h2>Достижения</h2>
+        ${achievementsHTML()}
       </div>
 
       <div class="card">
@@ -412,6 +464,7 @@
       <div class="card">
         <h2>Новое сообщение</h2>
         <textarea id="wallText" maxlength="${C.WALL_MAX_LEN}" placeholder="Поделитесь успехами…"></textarea>
+        <div class="emoji-row" id="emojiRow">${["👍", "🔥", "👏", "🏆", "👟", "🎉"].map((e) => `<button type="button" data-emoji="${e}" aria-label="Добавить ${e}">${e}</button>`).join("")}</div>
         <div class="row" style="margin-top:8px">
           <span class="field-hint" id="wallCounter">0 / ${C.WALL_MAX_LEN}</span>
           <div class="spacer"></div>
@@ -439,6 +492,14 @@
     if (canPost) {
       const ta = $("wallText"), cnt = $("wallCounter");
       ta.addEventListener("input", () => (cnt.textContent = ta.value.length + " / " + C.WALL_MAX_LEN));
+      views.wall.querySelectorAll("#emojiRow [data-emoji]").forEach((b) =>
+        b.addEventListener("click", () => {
+          if (ta.value.length + b.dataset.emoji.length <= C.WALL_MAX_LEN) {
+            ta.value += b.dataset.emoji;
+            cnt.textContent = ta.value.length + " / " + C.WALL_MAX_LEN;
+            ta.focus();
+          }
+        }));
       $("wallSend").addEventListener("click", () => {
         const text = ta.value.trim();
         if (!text) return toast("Сообщение пустое", "err");
@@ -500,6 +561,19 @@
           <button class="brass" id="saveEntry">${editEntry ? "Сохранить изменения" : "Сохранить"}</button>
           ${editEntry ? '<button class="ghost" id="cancelEdit">Отмена</button>' : ""}
         </div>
+      </div>
+
+      <div class="card">
+        <h2>Мои рекорды</h2>
+        ${(() => {
+          const r = myRecords(login);
+          return `<div class="rec-grid">
+            <div class="rec-tile"><div class="rec-num">${L.fmtKm(r.totalKm)}</div><div class="rec-lab">км за всё время</div></div>
+            <div class="rec-tile"><div class="rec-num">${L.fmtInt(r.best)}</div><div class="rec-lab">лучший день${r.bestDate ? " · " + fmtDate(r.bestDate) : ""}</div></div>
+            <div class="rec-tile"><div class="rec-num">${r.streak}</div><div class="rec-lab">дн. подряд сейчас</div></div>
+            <div class="rec-tile"><div class="rec-num">${L.fmtInt(r.last7)}</div><div class="rec-lab">шагов за 7 дней</div></div>
+          </div>`;
+        })()}
       </div>
 
       <div class="card">
@@ -740,6 +814,103 @@
     };
     $("masterBtn").addEventListener("click", doAuth);
     $("masterPass").addEventListener("keydown", (e) => { if (e.key === "Enter") doAuth(); });
+  }
+
+  /* ===================================================================
+   * Рекорды, серии, достижения, прогнозы (всё считается из entries,
+   * данные в базе не меняются)
+   * =================================================================== */
+  function last7Steps(login) {
+    const from = L.dateStr(Date.now() - 6 * 86400000);
+    return state.entries.reduce((s, e) => (e.login === login && e.date >= from ? s + (Number(e.steps) || 0) : s), 0);
+  }
+  function paceKmPerDay(login) { return L.stepsToKm(last7Steps(login)) / 7; }
+
+  // Текущая серия дней подряд (сегодняшний день ещё «не сгорел», если не внесён)
+  function streakDays(login) {
+    const set = new Set(state.entries.filter((e) => e.login === login && (Number(e.steps) || 0) > 0).map((e) => e.date));
+    let t = Date.now();
+    if (!set.has(L.dateStr(t))) t -= 86400000;
+    let n = 0;
+    while (set.has(L.dateStr(t))) { n++; t -= 86400000; }
+    return n;
+  }
+
+  function myRecords(login) {
+    let best = 0, bestDate = null, total = 0;
+    for (const e of state.entries) {
+      if (e.login !== login) continue;
+      const s = Number(e.steps) || 0;
+      total += s;
+      if (s > best) { best = s; bestDate = e.date; }
+    }
+    return { totalKm: L.stepsToKm(total), best, bestDate, streak: streakDays(login), last7: last7Steps(login) };
+  }
+
+  // Строка «→ следующая точка · прогноз финиша» для списка «Кто где»
+  function whoForecast(p) {
+    const next = L.checkpointDistances().find((c) => c.km > p.km + 1e-9);
+    const remain = Math.max(0, C.TOTAL_ROUTE_KM - p.km);
+    const pace = paceKmPerDay(p.login);
+    const eta = pace > 0 ? Math.ceil(remain / pace) : null;
+    let s = next ? `→ ${esc(next.name)} через ${L.fmtKm(next.km - p.km)} км` : "";
+    if (eta && eta < 1000) s += ` · финиш через ~${eta} дн.`;
+    return s;
+  }
+
+  function userBadges(u) {
+    const b = [];
+    const race = state.race || {};
+    if (race.lastWinner === u.login && (race.lap || 1) > 1) b.push(["🏆", "Победитель круга №" + ((race.lap || 2) - 1)]);
+    const lp = L.lapProgress(u.login, state.entries, race);
+    if (lp.pct >= 75) b.push(["🇫🇷", "На французском берегу"]);
+    else if (lp.pct >= 50) b.push(["⛴️", "Пересекает Ла-Манш"]);
+    let best = 0;
+    const mine = state.entries.filter((e) => e.login === u.login);
+    mine.forEach((e) => (best = Math.max(best, Number(e.steps) || 0)));
+    if (best >= 40000) b.push(["🚀", "40 000+ шагов за день"]);
+    else if (best >= 20000) b.push(["👟", "20 000+ шагов за день"]);
+    const st = streakDays(u.login);
+    if (st >= 3) b.push(["🔥", "Серия " + st + " дн. подряд"]);
+    const mt = L.monthlyTotals([u], mine);
+    let maxMonth = 0;
+    mt.months.forEach((mk) => (maxMonth = Math.max(maxMonth, ((mt.perUser[u.login] || {})[mk] || {}).steps || 0)));
+    if (maxMonth >= 300000) b.push(["🌕", "300 000+ шагов за месяц"]);
+    return b;
+  }
+
+  function achievementsHTML() {
+    if (!state.users.length) return '<div class="empty small">Появятся вместе с участниками.</div>';
+    const list = state.users.map((u) => ({ u, b: userBadges(u) }))
+      .sort((a, b) => b.b.length - a.b.length || a.u.login.localeCompare(b.u.login));
+    return list.map(({ u, b }) => `
+      <div class="ach-row">
+        ${window.avatarSVG(u, 30)}
+        <div style="flex:1">
+          <div style="font-weight:700">${esc(u.login)}</div>
+          <div class="ach-list">${b.length
+            ? b.map((x) => `<span class="ach">${x[0]} ${esc(x[1])}</span>`).join("")
+            : '<span class="muted small">пока без наград — всё впереди!</span>'}</div>
+        </div>
+      </div>`).join("");
+  }
+
+  // Конфетти при завершении круга (уважает prefers-reduced-motion)
+  function celebrate() {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const c = document.createElement("div");
+    c.className = "confetti";
+    const colors = ["#c8a24a", "#d1495b", "#2f9c95", "#14213d", "#57bdb6"];
+    for (let i = 0; i < 80; i++) {
+      const p = document.createElement("i");
+      p.style.left = Math.random() * 100 + "%";
+      p.style.background = colors[i % colors.length];
+      p.style.animationDelay = (Math.random() * 0.6).toFixed(2) + "s";
+      p.style.animationDuration = (2 + Math.random() * 1.5).toFixed(2) + "s";
+      c.appendChild(p);
+    }
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 4500);
   }
 
   /* ===================================================================

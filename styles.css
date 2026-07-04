@@ -226,6 +226,59 @@ table.grid tfoot td { font-weight: 800; background: var(--paper-2); }
 
 .mode-hint { font-size: 12px; }
 
+/* ---------- Медали и позиции ---------- */
+.rank-pos.p2 { color: #9aa2b1; }
+.rank-pos.p3 { color: #b87b4b; }
+
+/* ---------- Личные рекорды ---------- */
+.rec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.rec-tile { background: var(--paper-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 8px; text-align: center; }
+.rec-num { font-size: 20px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+.rec-lab { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+/* ---------- Достижения ---------- */
+.ach-row { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--line); }
+.ach-row:last-child { border-bottom: none; }
+.ach-row .avatar { flex: 0 0 30px; }
+.ach-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.ach { background: rgba(200, 162, 74, .13); border: 1px solid var(--brass); border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; color: #7a5c12; }
+
+/* ---------- Эмодзи на стене ---------- */
+.emoji-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.emoji-row button { background: var(--paper-2); border: 1px solid var(--line); color: var(--ink); min-height: 38px; padding: 4px 12px; border-radius: 10px; font-size: 17px; }
+.emoji-row button:hover { background: #fff; }
+
+/* ---------- Зебра в таблице итогов ---------- */
+table.grid tbody tr:nth-child(even) td { background: #faf7ef; }
+table.grid tbody tr:nth-child(even) td:first-child { background: #faf7ef; }
+
+/* ---------- Конфетти при финише круга ---------- */
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 90; overflow: hidden; }
+.confetti i { position: absolute; top: -14px; width: 8px; height: 14px; border-radius: 2px; animation: confetti-fall linear forwards; }
+@keyframes confetti-fall {
+  to { transform: translateY(105vh) rotate(720deg); }
+}
+
+/* ---------- Живая карта (только если анимация не отключена) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .route-anim { animation: routeflow 1.5s linear infinite; }
+  .ferry-bob { animation: bob 3.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  .boat-bob { animation: bob 4.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  .cloud-a { animation: drift 26s ease-in-out infinite alternate; }
+  .cloud-b { animation: drift 34s ease-in-out infinite alternate-reverse; }
+  .chip.leader { animation: leadpulse 2.2s ease-in-out infinite; }
+}
+@keyframes routeflow { to { stroke-dashoffset: -18.2; } }
+@keyframes bob {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(3px) rotate(1.5deg); }
+}
+@keyframes drift { to { transform: translateX(26px); } }
+@keyframes leadpulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(209, 73, 91, .18); }
+  50% { box-shadow: 0 0 0 8px rgba(209, 73, 91, .08); }
+}
+
 @media (min-width: 620px) {
   .app-header h1 { font-size: 20px; }
 }
