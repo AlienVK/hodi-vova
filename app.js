@@ -445,9 +445,8 @@
     const monthOpts = months.map((mk) =>
       `<option value="${mk}"${mk === state.statMonth ? " selected" : ""}>${esc(L.monthLabel(mk))}</option>`).join("");
 
-    // Диаграмма помесячной динамики суммарных шагов
-    const dyn = mt.months.map((mk) => ({ mk, steps: mt.totals[mk].steps }));
-    const dynChart = renderDynChart(dyn);
+    // График дневных шагов за последние 30 дней — по кривой на участника
+    const dailyChart = renderDailyLines();
 
     // Таблица помесячных итогов (переключатель шаги/км)
     const unit = state.statUnit;
@@ -495,8 +494,9 @@
       </div>
 
       <div class="card">
-        <h2>Помесячная динамика (суммарные шаги)</h2>
-        ${dyn.length ? dynChart : '<div class="empty small">Пока нет данных для графика.</div>'}
+        <h2>Дневные шаги за 30 дней</h2>
+        <p class="small muted" style="margin:6px 0 10px">Кривая на каждого участника; цвет совпадает с аватаром.</p>
+        ${dailyChart}
       </div>
 
       <div class="card">
@@ -529,19 +529,86 @@
     }
   }
 
-  function renderDynChart(dyn) {
-    const W = 100 * dyn.length + 20, H = 180, pad = 26, bw = 60;
-    const max = Math.max(1, ...dyn.map((d) => d.steps));
-    const bars = dyn.map((d, i) => {
-      const x = 20 + i * 100, h = (H - pad - 10) * (d.steps / max), y = H - pad - h;
-      return `<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="4"/>
-        <text x="${x + bw / 2}" y="${H - pad + 14}" text-anchor="middle">${esc(L.monthLabel(d.mk).replace(/ \d+$/, ""))}</text>
-        <text x="${x + bw / 2}" y="${y - 4}" text-anchor="middle" font-weight="700">${shortNum(d.steps)}</text>`;
-    }).join("");
-    return `<div class="table-wrap"><svg class="dyn-chart" viewBox="0 0 ${W} ${H}" style="min-width:${Math.max(W, 300)}px">
-      <line class="axis" x1="16" y1="${H - pad}" x2="${W}" y2="${H - pad}"/>${bars}</svg></div>`;
-  }
   function shortNum(n) { return n >= 1000 ? Math.round(n / 100) / 10 + "k" : String(n); }
+
+  // Цвет участника = оттенок его монограммы-аватара (та же формула, что в icons.js)
+  function userHue(login) { let h = 0; for (let i = 0; i < login.length; i++) h = (h * 31 + login.charCodeAt(i)) % 360; return h; }
+  function userColor(login) { return `hsl(${userHue(login)} 60% 42%)`; }
+  function niceCeil(v) {
+    if (v <= 0) return 1;
+    const p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p;
+    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * p;
+  }
+  // Плавная кривая (Catmull-Rom → Безье) с зажимом контрольных точек в область графика
+  function smoothPath(pts, topY, botY) {
+    if (pts.length < 2) return pts.length ? `M${pts[0].x} ${pts[0].y}` : "";
+    const cl = (v) => Math.max(topY, Math.min(botY, v));
+    let d = `M${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+      const c1x = p1.x + (p2.x - p0.x) / 6, c1y = cl(p1.y + (p2.y - p0.y) / 6);
+      const c2x = p2.x - (p3.x - p1.x) / 6, c2y = cl(p2.y - (p3.y - p1.y) / 6);
+      d += `C${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+    }
+    return d;
+  }
+
+  // Линейный график дневных шагов за 30 дней — по кривой на участника
+  function renderDailyLines() {
+    const N = 30;
+    const days = [];
+    for (let k = N - 1; k >= 0; k--) days.push(L.dateStr(Date.now() - k * 86400000));
+    const idxOf = {}; days.forEach((d, i) => (idxOf[d] = i));
+
+    const series = state.users.map((u) => {
+      const arr = new Array(N).fill(0);
+      for (const e of state.entries) {
+        if (e.login !== u.login) continue;
+        const i = idxOf[e.date];
+        if (i !== undefined) arr[i] += Number(e.steps) || 0;
+      }
+      return { u, arr, total: arr.reduce((a, b) => a + b, 0), color: userColor(u.login) };
+    }).filter((s) => s.total > 0).sort((a, b) => b.total - a.total);
+
+    if (!series.length) return '<div class="empty small">Пока нет шагов за последние 30 дней — внесите первые!</div>';
+
+    const W = 360, H = 226, padL = 34, padR = 12, padT = 12, padB = 30;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    let raw = 1; series.forEach((s) => s.arr.forEach((v) => (raw = Math.max(raw, v))));
+    const maxY = niceCeil(raw);
+    const X = (i) => padL + (i / (N - 1)) * plotW;
+    const Y = (v) => padT + (1 - v / maxY) * plotH;
+
+    // сетка + подписи оси Y
+    let grid = "";
+    for (let g = 0; g <= 4; g++) {
+      const val = maxY * g / 4, y = Y(val);
+      grid += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W - padR}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-width="0.7"${g ? ' opacity="0.6"' : ""}/>`
+        + `<text x="${padL - 4}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="8" fill="var(--muted)">${shortNum(val)}</text>`;
+    }
+    // подписи оси X (каждые ~6 дней + последний)
+    let xlab = "";
+    [0, 6, 12, 18, 24, 29].forEach((i) => {
+      const d = days[i];
+      xlab += `<text x="${X(i).toFixed(1)}" y="${H - padB + 14}" text-anchor="middle" font-size="8" fill="var(--muted)">${d.slice(8, 10)}.${d.slice(5, 7)}</text>`;
+    });
+
+    // кривые + точка на последнем значении
+    const lines = series.map((s) => {
+      const pts = s.arr.map((v, i) => ({ x: X(i), y: Y(v) }));
+      const last = pts[pts.length - 1];
+      return `<path d="${smoothPath(pts, padT, padT + plotH)}" fill="none" stroke="${s.color}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>`
+        + `<circle cx="${last.x.toFixed(1)}" cy="${last.y.toFixed(1)}" r="2.6" fill="${s.color}"/>`;
+    }).join("");
+
+    const legend = `<div class="legend">${series.map((s) =>
+      `<span><i style="background:${s.color}"></i>${esc(s.u.login)} · ${shortNum(s.total)}</span>`).join("")}</div>`;
+
+    return `<svg class="lines-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Дневные шаги за 30 дней">`
+      + grid
+      + `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" stroke="var(--line)" stroke-width="1"/>`
+      + xlab + lines + `</svg>` + legend;
+  }
 
   /* ===================================================================
    * ВКЛАДКА: СТЕНА
