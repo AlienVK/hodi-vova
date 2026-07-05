@@ -143,10 +143,8 @@
       + `<polygon points="${x - 5},${y - 12} ${x + 1},${y - 18} ${x + 7},${y - 12}" fill="${roof2}"/>`
       + `<rect x="${x + 7}" y="${y - 6}" width="8" height="9" fill="${wall}" stroke="${ln}" stroke-width="0.6"/>`
       + `<polygon points="${x + 6},${y - 6} ${x + 11},${y - 10.5} ${x + 16},${y - 6}" fill="${roof1}"/>`
-      + `<rect x="${x - 11.5}" y="${y - 5}" width="2.2" height="2.6" fill="${win}"/>`
-      + `<rect x="${x - 1}" y="${y - 9}" width="2.2" height="2.6" fill="${win}"/>`
-      + `<rect x="${x + 2.5}" y="${y - 9}" width="2.2" height="2.6" fill="${win}"/>`
-      + `<rect x="${x + 9.5}" y="${y - 3.5}" width="2.2" height="2.6" fill="${win}"/>`
+      + winRect(x - 11.5, y - 5, x, y, 0) + winRect(x - 1, y - 9, x, y, 1)
+      + winRect(x + 2.5, y - 9, x, y, 2) + winRect(x + 9.5, y - 3.5, x, y, 3)
       + `<line x1="${x + 1}" y1="${y - 18}" x2="${x + 1}" y2="${y - 21}" stroke="${ln}" stroke-width="0.7"/>`
       + `<circle cx="${x + 1}" cy="${y - 21.8}" r="1.1" fill="#c8a24a"/>`
       + `</g>`;
@@ -159,7 +157,24 @@
       + ` font-family="Georgia,'Times New Roman',serif">${label}</text>`;
   }
   function hill(x, y, w, h, c) { return `<path d="M${x} ${y} q${w / 2} ${-h} ${w} 0 z" fill="${c}" opacity="0.6"/>`; }
-  function gull(x, y) { return `<path d="M${x} ${y} q3 -3 6 0 q3 -3 6 0" fill="none" stroke="#7b8496" stroke-width="1" opacity="0.6"/>`; }
+  // птичка: тельце + два крыла (машут), летает туда-сюда
+  function gull(x, y, i) {
+    const dur = (6.5 + (i % 4) * 1.4).toFixed(1), delay = (-i * 1.7).toFixed(1), flap = (0.42 + (i % 3) * 0.12).toFixed(2);
+    return `<g transform="translate(${x} ${y})" opacity="0.8">`
+      + `<g class="bird-fly" style="animation-duration:${dur}s;animation-delay:${delay}s">`
+      + `<g class="bird-flap" style="animation-duration:${flap}s;animation-delay:${delay}s">`
+      + `<ellipse cx="0" cy="0.4" rx="1.7" ry="1.1" fill="#5b6472"/>`
+      + `<path d="M0 -0.2 Q-4.5 -3.4 -8.5 -1.4" fill="none" stroke="#5b6472" stroke-width="1.3" stroke-linecap="round"/>`
+      + `<path d="M0 -0.2 Q4.5 -3.4 8.5 -1.4" fill="none" stroke="#5b6472" stroke-width="1.3" stroke-linecap="round"/>`
+      + `<circle cx="1.7" cy="-0.2" r="0.7" fill="#3f4650"/>`
+      + `</g></g></g>`;
+  }
+  // окошко домика: плавно и «в разнобой» загорается тёплым и гаснет
+  function winRect(wx, wy, hx, hy, k) {
+    const a = Math.round(hx) * 13 + Math.round(hy) * 7 + k * 29;
+    const delay = ((a % 120) / 10).toFixed(1), dur = 9 + (a % 6);
+    return `<rect class="win" x="${wx}" y="${wy}" width="2.2" height="2.6" fill="#5c5648" style="--wdelay:${delay}s;--wd:${dur}s"/>`;
+  }
 
   function mapScenery() {
     const T = YW_TOP, B = YW_BOT, mid = (YW_TOP + YW_BOT) / 2;
@@ -238,23 +253,25 @@
       const wy = YW_TOP + 26 + k * ((YW_BOT - YW_TOP - 40) / 2);
       waves += `<path d="M14 ${wy} q18 -7 36 0 t36 0 t36 0 t36 0 t36 0 t36 0 t36 0" fill="none" stroke="#ffffff" stroke-width="1.4" opacity="0.35"/>`;
     }
-    const ferry = `<g transform="translate(${MAP.CX - 70} ${midY - 18})"><g class="ferry-bob">
-      <path d="M0 10 h34 l-5 9 h-24 z" fill="#3b4a63"/><rect x="8" y="2" width="16" height="9" fill="#e9e3d2"/>
-      <rect x="15" y="-8" width="2" height="10" fill="#8a8267"/><rect x="17" y="-8" width="7" height="5" fill="#d1495b"/></g></g>`;
-    const gulls = gull(MAP.CX + 40, YW_TOP + 30) + gull(MAP.CX + 58, YW_TOP + 40) + gull(60, YW_BOT - 34);
+    const ferry = `<g transform="translate(${MAP.CX - 84} ${midY - 18})"><g class="boat-sail" style="animation-duration:13s">`
+      + `<g class="ferry-bob"><path d="M-2 12 q4 8 17 8 h6 q13 0 17 -8 z" fill="#33415c"/>`
+      + `<rect x="8" y="2" width="17" height="10" rx="1" fill="#e9e3d2" stroke="#8a8267" stroke-width="0.5"/>`
+      + `<rect x="10.5" y="4" width="3" height="3" fill="#8fb4c9"/><rect x="15" y="4" width="3" height="3" fill="#8fb4c9"/><rect x="19.5" y="4" width="3" height="3" fill="#8fb4c9"/>`
+      + `<rect x="15.5" y="-9" width="2" height="11" fill="#8a8267"/><path d="M17.5 -9 h8 l-2.5 3 l2.5 3 h-8 z" fill="#d1495b"/></g></g></g>`;
+    const gulls = gull(MAP.CX + 40, YW_TOP + 30, 0) + gull(MAP.CX + 62, YW_TOP + 44, 1) + gull(66, YW_BOT - 36, 2) + gull(MAP.CX + 30, midY + 30, 3);
     const label = `<text x="322" y="${midY}" text-anchor="middle" transform="rotate(90 322 ${midY})" font-size="12" font-style="italic" font-weight="700" fill="#256f69" letter-spacing="2.5" font-family="Georgia,'Times New Roman',serif" opacity="0.85">ЛА-МАНШ</text>`;
 
     // пирс Кале с лодочкой у причала
     const pier = `<path d="M266 ${B} v-14 h14" fill="none" stroke="#6f6a58" stroke-width="2.6" opacity="0.85"/>`
       + `<ellipse cx="286" cy="${B - 15}" rx="4" ry="2" fill="#9a5b4a"/>`;
 
-    // морской змей — классика старинных карт
-    const monster = `<g opacity="0.75" class="boat-bob">`
+    // морской змей — классика старинных карт, плавает по проливу
+    const monster = `<g class="serpent-swim"><g opacity="0.78" class="boat-bob">`
       + `<path d="M228 552 q8 -12 16 0 q8 12 16 0 q8 -12 16 0" fill="none" stroke="#2b7f78" stroke-width="3" stroke-linecap="round"/>`
       + `<path d="M228 552 q-5 4 -9 1" fill="none" stroke="#2b7f78" stroke-width="2" stroke-linecap="round"/>`
       + `<circle cx="279" cy="547" r="3.6" fill="#2b7f78"/>`
       + `<circle cx="280.6" cy="546" r="0.9" fill="#ffffff"/>`
-      + `<path d="M278 543.5 l-1.5 -3 M281 543.5 l1.5 -3" stroke="#2b7f78" stroke-width="1.2" stroke-linecap="round"/></g>`;
+      + `<path d="M278 543.5 l-1.5 -3 M281 543.5 l1.5 -3" stroke="#2b7f78" stroke-width="1.2" stroke-linecap="round"/></g></g>`;
 
     // роза ветров
     const compass = `<g transform="translate(58 468)" opacity="0.9">`
@@ -272,37 +289,50 @@
 
     // дополнительные достопримечательности и детали
     const extras =
-      // самолёт с инверсионным следом (небо над Лондоном)
-      `<line x1="14" y1="58" x2="56" y2="58" stroke="#ffffff" stroke-width="2" stroke-dasharray="6 5" opacity="0.7"/>`
-      + `<path d="M56 52 l17 6 l-17 6 l5 -6 z" fill="#3b4a63" opacity="0.85"/>`
+      // самолёт: летит в верхней «полосе неба» (над метками) слева направо и обратно
+      `<g class="plane-fly"><g class="plane-face">`
+      + `<path d="M-22 22 h-42" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="1 7" opacity="0.55"/>`
+      + `<path d="M-15 22 L-21.5 13 L-9 20.5 Z" fill="#2a3648"/>`
+      + `<path d="M1 19.6 L-14 11 L8 19 Z" fill="#2a3648"/>`
+      + `<path d="M1 24.4 L-14 33 L8 25 Z" fill="#2a3648"/>`
+      + `<path d="M-16 19.2 L13 19.2 L22 22 L13 24.8 L-16 24.8 Z" fill="#33415c"/>`
+      + `<ellipse cx="9" cy="21.6" rx="2.4" ry="1.1" fill="#bfe0ef"/>`
+      + `</g></g>`
       // Биг-Бен у берега Темзы
       + `<g opacity="0.95"><rect x="100" y="98" width="10" height="30" fill="#cfc8b2" stroke="#8a8267" stroke-width="0.7"/>`
       + `<polygon points="100,98 105,88 110,98" fill="#9a5b4a"/>`
       + `<circle cx="105" cy="106" r="3" fill="#ffffff" stroke="#8a8267" stroke-width="0.7"/>`
       + `<line x1="105" y1="106" x2="105" y2="103.6" stroke="#3b3a36" stroke-width="0.7"/>`
       + `<line x1="105" y1="106" x2="107" y2="106" stroke="#3b3a36" stroke-width="0.7"/></g>`
-      // овцы на английском лугу
-      + [[140, 296], [156, 304], [170, 294]].map(([sx, sy]) =>
-        `<g opacity="0.9"><ellipse cx="${sx}" cy="${sy}" rx="7" ry="5" fill="#f4f1e8" stroke="#8a8267" stroke-width="0.6"/>`
-        + `<circle cx="${sx + 6.5}" cy="${sy - 2}" r="2.6" fill="#3b3a36"/>`
-        + `<rect x="${sx - 4}" y="${sy + 4}" width="1.6" height="4" fill="#3b3a36"/>`
-        + `<rect x="${sx + 2}" y="${sy + 4}" width="1.6" height="4" fill="#3b3a36"/></g>`).join("")
-      // маяк на скалах Дувра
-      + `<g opacity="0.95"><ellipse cx="306" cy="${YW_TOP - 6}" rx="12" ry="4" fill="#c9c2ae"/>`
-      + `<rect x="301" y="${YW_TOP - 34}" width="10" height="26" fill="#f4f1e8" stroke="#8a8267" stroke-width="0.8"/>`
-      + `<rect x="301" y="${YW_TOP - 29}" width="10" height="5" fill="#d1495b"/>`
-      + `<rect x="301" y="${YW_TOP - 19}" width="10" height="5" fill="#d1495b"/>`
-      + `<rect x="299" y="${YW_TOP - 39}" width="14" height="5" fill="#14213d"/>`
-      + `<circle cx="306" cy="${YW_TOP - 41}" r="2.5" fill="#ffd76a"/></g>`
-      // парусник в проливе
-      + `<g class="boat-bob"><path d="M52 ${midY + 38} h24 l-5 7 h-15 z" fill="#9a5b4a"/>`
-      + `<path d="M64 ${midY + 36} v-17 l11 17 z" fill="#ffffff"/>`
-      + `<path d="M62 ${midY + 36} v-13 l-9 13 z" fill="#ece7da"/></g>`
-      // мельница в полях Пикардии
-      + `<g opacity="0.95"><path d="M136 708 l3 -18 h5 l3 18 z" fill="#b98d5f" stroke="#8a8267" stroke-width="0.6"/>`
-      + `<g stroke="#6f5a3a" stroke-width="2" stroke-linecap="round">`
-      + `<line x1="141.5" y1="690" x2="131" y2="679"/><line x1="141.5" y1="690" x2="152" y2="679"/>`
-      + `<line x1="141.5" y1="690" x2="131" y2="701"/><line x1="141.5" y1="690" x2="152" y2="701"/></g>`
+      // овцы на английском лугу — пушистые, пасутся и бродят
+      + [[141, 297, 0], [159, 303, 1], [173, 295, 2], [151, 289, 3]].map(([sx, sy, i]) =>
+        `<g transform="translate(${sx} ${sy})"><g class="sheep-wander" style="animation-duration:${6 + i}s;animation-delay:${(-i * 1.6).toFixed(1)}s">`
+        + `<g stroke="#6a5a50" stroke-width="1.5" stroke-linecap="round"><line x1="-3.5" y1="2.4" x2="-4" y2="7"/><line x1="1" y1="3" x2="1" y2="7.6"/><line x1="4.5" y1="2.4" x2="5" y2="7"/></g>`
+        + `<g fill="#f7f4ec" stroke="#d9d3c3" stroke-width="0.5"><circle cx="-4.4" cy="-1" r="3.3"/><circle cx="-1" cy="-2.8" r="3.9"/><circle cx="2.6" cy="-2.3" r="3.6"/><circle cx="5" cy="-0.2" r="3.1"/><circle cx="1.6" cy="0.9" r="3.9"/><circle cx="-2.4" cy="1" r="3.3"/></g>`
+        + `<g class="sheep-head"><ellipse cx="7.3" cy="1.6" rx="2.5" ry="3.1" fill="#413b35"/><ellipse cx="5.6" cy="-1" rx="1.3" ry="0.9" fill="#413b35"/><ellipse cx="7.6" cy="4" rx="1.4" ry="1" fill="#5b554e"/></g>`
+        + `</g></g>`).join("")
+      // маяк на скалах Дувра — мигает
+      + `<g opacity="0.97"><ellipse cx="306" cy="${YW_TOP - 6}" rx="12" ry="4" fill="#c9c2ae"/>`
+      + `<path d="M301.5 ${YW_TOP - 8} L303 ${YW_TOP - 34} h6 L310.5 ${YW_TOP - 8} z" fill="#f4f1e8" stroke="#8a8267" stroke-width="0.8"/>`
+      + `<rect x="302" y="${YW_TOP - 29} " width="8" height="4.6" fill="#d1495b"/>`
+      + `<rect x="302.6" y="${YW_TOP - 20}" width="6.8" height="4.6" fill="#d1495b"/>`
+      + `<rect x="299.5" y="${YW_TOP - 39}" width="13" height="5" rx="1" fill="#14213d"/>`
+      + `<circle class="lamp-halo" cx="306" cy="${YW_TOP - 41.5}" r="7" fill="#ffe08a" opacity="0.5"/>`
+      + `<circle class="lamp-blink" cx="306" cy="${YW_TOP - 41.5}" r="2.6" fill="#fff2c4"/></g>`
+      // парусник в проливе — плавает
+      + `<g class="boat-sail" style="animation-duration:10s;animation-delay:-3.5s"><g class="boat-bob">`
+      + `<path d="M50 ${midY + 39} q2 6 13 6 q11 0 13 -6 z" fill="#9a5b4a"/>`
+      + `<rect x="63" y="${midY + 20} " width="1.6" height="25" fill="#6f5a3a"/>`
+      + `<path d="M64.6 ${midY + 21} v20 l12 -3 z" fill="#ffffff" stroke="#d9d3c3" stroke-width="0.4"/>`
+      + `<path d="M63 ${midY + 23} v18 l-9 -2 z" fill="#ece7da" stroke="#d9d3c3" stroke-width="0.4"/></g></g>`
+      // мельница в полях Пикардии — крылья вращаются
+      + `<g opacity="0.96"><path d="M136 709 l3 -19 h5 l3 19 z" fill="#c19a63" stroke="#8a8267" stroke-width="0.6"/>`
+      + `<path d="M136.2 700 h9.6" stroke="#8a8267" stroke-width="0.6"/>`
+      + `<g class="mill-blades" style="transform-box:view-box;transform-origin:141.5px 690px" stroke="#6f5a3a" stroke-width="1.8" stroke-linecap="round">`
+      + `<line x1="141.5" y1="690" x2="129" y2="677.5"/><line x1="141.5" y1="690" x2="154" y2="677.5"/>`
+      + `<line x1="141.5" y1="690" x2="129" y2="702.5"/><line x1="141.5" y1="690" x2="154" y2="702.5"/>`
+      + `<line x1="133" y1="681.5" x2="137.5" y2="686" stroke-width="1"/><line x1="150" y1="681.5" x2="145.5" y2="686" stroke-width="1"/>`
+      + `<line x1="133" y1="698.5" x2="137.5" y2="694" stroke-width="1"/><line x1="150" y1="698.5" x2="145.5" y2="694" stroke-width="1"/></g>`
       + `<circle cx="141.5" cy="690" r="1.8" fill="#3b3a36"/></g>`
       // Триумфальная арка на подходе к Парижу
       + `<g opacity="0.95"><rect x="222" y="752" width="18" height="16" fill="#e8e0cc" stroke="#8a8267" stroke-width="0.7"/>`

@@ -268,6 +268,27 @@ table.grid tbody tr:nth-child(even) td:first-child { background: #faf7ef; }
   .cloud-a { animation: drift 26s ease-in-out infinite alternate; }
   .cloud-b { animation: drift 34s ease-in-out infinite alternate-reverse; }
   .chip.leader { animation: leadpulse 2.2s ease-in-out infinite; }
+
+  /* самолёт: летит влево-вправо и обратно (с разворотом) */
+  .plane-fly { animation: plane-fly 17s ease-in-out infinite; }
+  .plane-face { transform-box: fill-box; transform-origin: center; animation: plane-face 17s linear infinite; }
+  /* лодки/паром — плавают туда-сюда (поверх покачивания) */
+  .boat-sail { animation: boat-sail 9s ease-in-out infinite alternate; }
+  /* морской змей плывёт */
+  .serpent-swim { animation: serpent-swim 12s ease-in-out infinite alternate; }
+  /* птицы: летят туда-сюда + машут крыльями */
+  .bird-fly { animation: bird-fly 8s ease-in-out infinite alternate; }
+  .bird-flap { transform-box: fill-box; transform-origin: center; animation: flap 0.5s ease-in-out infinite; }
+  /* овцы пасутся и бродят */
+  .sheep-wander { animation: sheep-wander 7s ease-in-out infinite alternate; }
+  .sheep-head { transform-box: fill-box; transform-origin: 45% 12%; animation: graze 5s ease-in-out infinite; }
+  /* маяк мигает */
+  .lamp-blink { animation: lamp-blink 2.6s ease-in-out infinite; }
+  .lamp-halo { animation: lamp-halo 2.6s ease-in-out infinite; }
+  /* мельница вращается */
+  .mill-blades { animation: spin 7s linear infinite; }
+  /* окошки в домиках плавно загораются по одному */
+  .win { animation: winglow var(--wd, 10s) ease-in-out infinite; animation-delay: var(--wdelay, 0s); }
 }
 @keyframes routeflow { to { stroke-dashoffset: -18.2; } }
 @keyframes bob {
@@ -278,6 +299,33 @@ table.grid tbody tr:nth-child(even) td:first-child { background: #faf7ef; }
 @keyframes leadpulse {
   0%, 100% { box-shadow: 0 0 0 3px rgba(209, 73, 91, .18); }
   50% { box-shadow: 0 0 0 8px rgba(209, 73, 91, .08); }
+}
+@keyframes plane-fly {
+  0% { transform: translateX(-70px); }
+  50% { transform: translateX(374px); }
+  100% { transform: translateX(-70px); }
+}
+@keyframes plane-face {
+  0%, 46% { transform: scaleX(1); }
+  54%, 96% { transform: scaleX(-1); }
+  100% { transform: scaleX(1); }
+}
+@keyframes boat-sail { to { transform: translateX(40px); } }
+@keyframes serpent-swim { to { transform: translateX(34px); } }
+@keyframes bird-fly { from { transform: translateX(-24px); } to { transform: translateX(24px); } }
+@keyframes flap { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.5); } }
+@keyframes sheep-wander { to { transform: translateX(11px); } }
+@keyframes graze {
+  0%, 62% { transform: rotate(2deg); }
+  80% { transform: rotate(-26deg); }
+  100% { transform: rotate(2deg); }
+}
+@keyframes lamp-blink { 0%, 100% { opacity: 1; } 46% { opacity: 0.12; } }
+@keyframes lamp-halo { 0%, 100% { opacity: 0.55; } 46% { opacity: 0; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes winglow {
+  0%, 84%, 100% { fill: #5c5648; }
+  92% { fill: #ffcf6a; }
 }
 
 @media (min-width: 620px) {
