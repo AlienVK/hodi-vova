@@ -289,15 +289,19 @@
 
     // дополнительные достопримечательности и детали
     const extras =
-      // самолёт: летит в верхней «полосе неба» (над метками) слева направо и обратно
-      `<g class="plane-fly"><g class="plane-face">`
-      + `<path d="M-22 22 h-42" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="1 7" opacity="0.55"/>`
-      + `<path d="M-15 22 L-21.5 13 L-9 20.5 Z" fill="#2a3648"/>`
-      + `<path d="M1 19.6 L-14 11 L8 19 Z" fill="#2a3648"/>`
-      + `<path d="M1 24.4 L-14 33 L8 25 Z" fill="#2a3648"/>`
-      + `<path d="M-16 19.2 L13 19.2 L22 22 L13 24.8 L-16 24.8 Z" fill="#33415c"/>`
-      + `<ellipse cx="9" cy="21.6" rx="2.4" ry="1.1" fill="#bfe0ef"/>`
-      + `</g></g>`
+      // белый игрушечный пассажирский самолётик: взлетает у Биг-Бена,
+      // по дуге садится у маяка и обратно. База — точка взлёта.
+      `<g transform="translate(52 104)"><g class="plane-fly"><g class="plane-tilt"><g class="plane-face">`
+      + `<path d="M-3 -1.6 L-10 -8 L4.5 -2 Z" fill="#e7ebef"/>`
+      + `<path d="M-12 -1 L-17 -10.5 L-8 -2 Z" fill="#d1495b"/>`
+      + `<path d="M-12.5 1 L-17 4.5 L-8 2 Z" fill="#e7ebef" stroke="#c9c2ae" stroke-width="0.3"/>`
+      + `<path d="M-13 0 Q-13 -4.4 -6 -4.4 L8 -4.4 Q17.5 -4 19.5 0 Q17.5 4 8 4.4 L-6 4.4 Q-13 4.4 -13 0 Z" fill="#ffffff" stroke="#cfc8b8" stroke-width="0.7"/>`
+      + `<path d="M-12 0.4 L16.8 0.4" stroke="#2f9c95" stroke-width="1.4" stroke-linecap="round"/>`
+      + `<g fill="#7fb2cf"><circle cx="-8" cy="-1.7" r="0.75"/><circle cx="-5" cy="-1.9" r="0.75"/><circle cx="-2" cy="-2" r="0.75"/><circle cx="1" cy="-2" r="0.75"/><circle cx="4" cy="-1.9" r="0.75"/><circle cx="7" cy="-1.8" r="0.75"/></g>`
+      + `<path d="M13 -2 Q17.6 -1.3 18.8 0 L13 0.2 Z" fill="#5f93b8"/>`
+      + `<path d="M-2 2 L-8.5 10.5 L6 3 Z" fill="#eef1f4" stroke="#cfc8b8" stroke-width="0.5"/>`
+      + `<ellipse cx="-2.6" cy="6.4" rx="1.7" ry="1" fill="#cfd4da"/>`
+      + `</g></g></g></g>`
       // Биг-Бен у берега Темзы
       + `<g opacity="0.95"><rect x="100" y="98" width="10" height="30" fill="#cfc8b2" stroke="#8a8267" stroke-width="0.7"/>`
       + `<polygon points="100,98 105,88 110,98" fill="#9a5b4a"/>`

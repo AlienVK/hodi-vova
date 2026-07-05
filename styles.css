@@ -269,9 +269,12 @@ table.grid tbody tr:nth-child(even) td:first-child { background: #faf7ef; }
   .cloud-b { animation: drift 34s ease-in-out infinite alternate-reverse; }
   .chip.leader { animation: leadpulse 2.2s ease-in-out infinite; }
 
-  /* самолёт: летит влево-вправо и обратно (с разворотом) */
-  .plane-fly { animation: plane-fly 17s ease-in-out infinite; }
-  .plane-face { transform-box: fill-box; transform-origin: center; animation: plane-face 17s linear infinite; }
+  /* самолётик: медленно взлетает у Биг-Бена, по дуге садится у маяка и обратно.
+     translate — на .plane-fly (без transform-box), наклон — на .plane-tilt,
+     разворот — на .plane-face; так translate и rotate не конфликтуют. */
+  .plane-fly { animation: plane-fly 26s ease-in-out infinite; }
+  .plane-tilt { transform-box: fill-box; transform-origin: center; animation: plane-tilt 26s ease-in-out infinite; }
+  .plane-face { transform-box: fill-box; transform-origin: center; animation: plane-face 26s linear infinite; }
   /* лодки/паром — плавают туда-сюда (поверх покачивания) */
   .boat-sail { animation: boat-sail 9s ease-in-out infinite alternate; }
   /* морской змей плывёт */
@@ -301,14 +304,35 @@ table.grid tbody tr:nth-child(even) td:first-child { background: #faf7ef; }
   50% { box-shadow: 0 0 0 8px rgba(209, 73, 91, .08); }
 }
 @keyframes plane-fly {
-  0% { transform: translateX(-70px); }
-  50% { transform: translateX(374px); }
-  100% { transform: translateX(-70px); }
+  0%, 5%           { transform: translate(0px, 0px); }       /* стоит у Биг-Бена */
+  12%              { transform: translate(28px, -22px); }    /* взлёт */
+  27%              { transform: translate(122px, -28px); }   /* вершина дуги */
+  40%              { transform: translate(206px, 168px); }   /* снижение */
+  47%, 50%, 55%    { transform: translate(234px, 256px); }   /* стоит у маяка */
+  62%              { transform: translate(206px, 168px); }   /* взлёт назад */
+  77%              { transform: translate(112px, -28px); }   /* вершина дуги */
+  90%              { transform: translate(24px, -20px); }    /* снижение */
+  96%, 100%        { transform: translate(0px, 0px); }       /* стоит у Биг-Бена */
+}
+@keyframes plane-tilt {
+  0%     { transform: rotate(0deg); }
+  5%     { transform: rotate(-3deg); }
+  12%    { transform: rotate(-15deg); }   /* нос вверх на взлёте */
+  27%    { transform: rotate(-2deg); }
+  40%    { transform: rotate(21deg); }    /* нос вниз на снижении */
+  47%    { transform: rotate(5deg); }
+  50%    { transform: rotate(0deg); }
+  55%    { transform: rotate(3deg); }
+  62%    { transform: rotate(15deg); }    /* взлёт назад (самолёт зеркальный) */
+  77%    { transform: rotate(2deg); }
+  90%    { transform: rotate(-15deg); }
+  96%    { transform: rotate(-5deg); }
+  100%   { transform: rotate(0deg); }
 }
 @keyframes plane-face {
-  0%, 46% { transform: scaleX(1); }
-  54%, 96% { transform: scaleX(-1); }
-  100% { transform: scaleX(1); }
+  0%, 48%  { transform: scaleX(1); }
+  52%, 98% { transform: scaleX(-1); }
+  100%     { transform: scaleX(1); }
 }
 @keyframes boat-sail { to { transform: translateX(40px); } }
 @keyframes serpent-swim { to { transform: translateX(34px); } }
